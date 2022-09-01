@@ -84,7 +84,7 @@ void dma_init(PIO pio, uint sm) {
                           &channel_config,
 			  &pio->txf[sm],
 			  NULL, // set later (?) 
-			  8, // ? 
+			  1, // ? 
 			  false); 
     
     irq_set_exclusive_handler(DMA_IRQ_0, dma_complete_handler); 

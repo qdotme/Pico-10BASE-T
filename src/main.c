@@ -9,6 +9,7 @@
 #include "hardware/irq.h"
 #include "udp.h"
 #include "hardware/pio.h"
+#include "hardware/dma.h"
 #include "ser_10base_t.pio.h"
 
 #include <stdio.h>
@@ -79,10 +80,13 @@ int main() {
         sprintf(udp_payload, "Hello World!! Raspico 10BASE-T !! lp_cnt:%ld", lp_cnt);
 
         udp_packet_gen_10base(tx_buf_udp, udp_payload);
-        for (uint32_t i = 0; i < DEF_UDP_BUF_SIZE+1; i++) {
+        #if 0 // CPU-heavy..  
+	for (uint32_t i = 0; i < DEF_UDP_BUF_SIZE+1; i++) {
             ser_10base_t_tx_10b(pio_ser_wr, sm0, tx_buf_udp[i]);
         }
-
+	#else
+	dma_channel_transfer_from_buffer_now(0, tx_buf_udp, DEF_UDP_BUF_SIZE+1); 
+	#endif 
         sleep_ms(20);
     }
 }
