@@ -1,5 +1,7 @@
 #include "udp.h"
 
+#include "hardware/dma.h"
+
 // Manchester table
 // input 8bit, output 32bit, LSB first
 // b00 -> IDLE
@@ -54,6 +56,41 @@ static void _make_crc_table(void) {
 
 void udp_init(void) {
     _make_crc_table();
+
+
+}
+
+#define DMA_CHANNEL 0
+#define DMA_CHANNEL_MASK (1u << DMA_CHANNEL)
+
+void __isr dma_complete_handler() {
+    if (dma_hw->ints0 & DMA_CHANNEL_MASK) {
+        // clear IRQ
+	dma_hw->ints0 = DMA_CHANNEL_MASK;
+	// Do nothing.. for now ;) 
+    }
+}
+
+void dma_init(PIO pio, uint sm) {
+    // DMA init
+
+    dma_claim_mask(DMA_CHANNEL_MASK); 
+
+    dma_channel_config channel_config = dma_channel_get_default_config(DMA_CHANNEL); 
+
+    channel_config_set_dreq(&channel_config, pio_get_dreq(pio, sm, true)); 
+
+    dma_channel_configure(DMA_CHANNEL, 
+                          &channel_config,
+			  &pio->txf[sm],
+			  NULL, // set later (?) 
+			  8, // ? 
+			  false); 
+    
+    irq_set_exclusive_handler(DMA_IRQ_0, dma_complete_handler); 
+
+    dma_channel_set_irq0_enabled(DMA_CHANNEL, true); 
+    irq_set_enabled(DMA_IRQ_0, true); 
 }
 
 

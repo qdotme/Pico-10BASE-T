@@ -2,6 +2,7 @@
 #define __UDP_H__
 
 #include <stdint.h>
+#include <hardware/pio.h>
 
 // Buffer size config
 #define DEF_UDP_PAYLOAD_SIZE    (64)
@@ -39,6 +40,7 @@
 
 
 void udp_init(void);
+void dma_init(PIO pio, uint sm); 
 void udp_packet_gen_10base(uint32_t *buf, uint8_t *udp_payload);
 
 #endif //__UDP_H__

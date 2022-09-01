@@ -11,6 +11,8 @@
 #include "hardware/pio.h"
 #include "ser_10base_t.pio.h"
 
+#include <stdio.h>
+
 #define HW_PINNUM_LED0      (25)    // Pico onboard LED
 
 static struct repeating_timer timer;
@@ -38,7 +40,7 @@ int main() {
 
     stdio_init_all();
     udp_init();
-
+    
 
     // Onboard LED tikatika~
     gpio_init(HW_PINNUM_LED0);
@@ -50,6 +52,9 @@ int main() {
     // sideset を使う都合上、GPIOピンは連番である必要がある。16,17を使用する。
     offset = pio_add_program(pio_ser_wr, &ser_10base_t_program);
     ser_10base_t_program_init(pio_ser_wr, sm0, offset, 16);
+
+    // DMA for PIO init
+    dma_init(pio_ser_wr, sm0); 
 
 
     // 最初にNLPを送って対向機器に10BASE-T半二重であることを認識させる
@@ -71,7 +76,7 @@ int main() {
     // 20ms周期で送る場合はなくても良いみたい。
     while (1) {
         lp_cnt++;
-        sprintf(udp_payload, "Hello World!! Raspico 10BASE-T !! lp_cnt:%d", lp_cnt);
+        sprintf(udp_payload, "Hello World!! Raspico 10BASE-T !! lp_cnt:%ld", lp_cnt);
 
         udp_packet_gen_10base(tx_buf_udp, udp_payload);
         for (uint32_t i = 0; i < DEF_UDP_BUF_SIZE+1; i++) {
